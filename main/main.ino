@@ -6,15 +6,22 @@
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 const char* ssid = "Marisa";
 const char* password = "10092018";
+const String urlAPI = "http://api.coindesk.com/v1/bpi/currentprice/BTC.json";
+
 
 void setup() {
 
-  Serial.begin(115200);
+  initializeLed();
+  connectWifi();
+  writeInDisplay("Conectado");
+}
 
-  lcd.init();
-  lcd.setCursor(0, 0);
-  lcd.backlight();
-  delay(1000);
+void loop() {
+  makeRequestAndGetBitcoinCurrentPrice();
+  delay(300000);
+}
+
+void connectWifi() {
 
   WiFi.begin(ssid, password);
 
@@ -22,40 +29,45 @@ void setup() {
     lcd.print("Conectando wi-fi!");
     delay(2000);
   }
-
-  lcd.clear();
-  lcd.print("Conectado!");
 }
 
-void loop() {
+void initializeLed() {
+
+  lcd.init();
+  lcd.backlight();
+}
+
+void writeInDisplay(const char* message) {
+
+  lcd.clear();
+  lcd.setCursor(2, 0);
+  lcd.print(message);
+}
+
+void makeRequestAndGetBitcoinCurrentPrice() {
 
   if ((WiFi.status() == WL_CONNECTED)) {
     HTTPClient httpClient;
 
-    httpClient.begin("https://www.mercadobitcoin.net/api/BTC/ticker/");
+    httpClient.begin(urlAPI);
     int httpCode = httpClient.GET();
 
     if (httpCode > 0) {
       String payload = httpClient.getString();
 
-      char json[500];
-      payload.replace(" ", "");
-      payload.replace("\n", "");
-      payload.trim();
-      payload.remove(0, 1);
-      payload.toCharArray(json, 500);
+      StaticJsonDocument<768> doc;
+      deserializeJson(doc, payload);
 
-      StaticJsonDocument doc(200);
-      deserializeJson(doc, json);
+      JsonObject bpi = doc["bpi"];
+      const char* bitcoinCurrentPrice = bpi["USD"]["rate"];
 
-      Serial.print(doc);
+      writeInDisplay(bitcoinCurrentPrice);
+      doc.clear();
+
     } else {
-      lcd.clear();
-      lcd.print("Requisicao erro");
+      writeInDisplay("Erro requisição");
     }
 
     httpClient.end();
   }
-
-  delay(5000);
 }
