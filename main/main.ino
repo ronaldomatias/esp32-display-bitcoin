@@ -39,7 +39,7 @@ void initializeLed() {
 
 void writeInDisplay(String message) {
   lcd.clear();
-  lcd.setCursor(2, 0);
+  lcd.setCursor(0, 1);
   lcd.print(message);
 }
 
@@ -60,7 +60,7 @@ void makeRequestAndGetBitcoinCurrentPrice() {
       String bitcoinCurrentPrice = bpi["USD"]["rate"];
 
       bitcoinCurrentPrice.remove(9);
-      writeInDisplay(bitcoinCurrentPrice);
+      writeInDisplay("BTCUSD " + bitcoinCurrentPrice);
       doc.clear();
 
     } else {
